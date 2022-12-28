@@ -48,7 +48,7 @@ export class HttpDispatcherServiceClient implements DispatcherServiceClient {
           { apiResponse },
           'Unexpected Connection Allocation Server response',
         );
-        throw new Error('Unexpected connection allocation server response');
+        throw new Error('Unexpected connection cllocation server response');
       }
       const snykRequestId = response.headers['snyk-request-id'] || '';
       logger.trace(
