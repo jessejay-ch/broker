@@ -2,7 +2,6 @@ import { Plugin } from '../../../../lib/client/brokerClientPlugins/plugins/githu
 import { findProjectRoot } from '../../../../lib/common/config/config';
 import nock from 'nock';
 import { delay } from '../../../helpers/utils';
-import { clearTimeout } from 'timers';
 
 describe('Github Server App Plugin', () => {
   const pluginsFixturesFolderPath = `${findProjectRoot(
@@ -18,6 +17,45 @@ describe('Github Server App Plugin', () => {
     );
     expect(plugin.pluginCode).toEqual('GITHUB_SERVER_APP_PLUGIN');
     expect(plugin.applicableBrokerTypes).toEqual(['github-server-app']);
+  });
+
+  it('startUp plugin method errors if missing env vars', async () => {
+    const config = {};
+    const plugin = new Plugin(config);
+
+    try {
+      await plugin.startUp({});
+
+      //we shouldn't hit here
+      expect(true).toBeFalsy();
+    } catch (err) {
+      expect(err).toEqual(
+        Error(
+          'Error in Github Server App Authentication Plugin-GITHUB_SERVER_APP_PLUGIN startup. Error: Missing environment variable(s) for plugin (GITHUB_APP_CLIENT_ID, GITHUB_APP_PRIVATE_PEM_PATH, GITHUB_APP_INSTALLATION_ID)',
+        ),
+      );
+    }
+  });
+
+  it('startUp plugin method errors if invalid pem path', async () => {
+    const config = {
+      GITHUB_APP_CLIENT_ID: '123',
+      GITHUB_APP_INSTALLATION_ID: '123',
+      GITHUB_APP_PRIVATE_PEM_PATH: '/invalid/path',
+    };
+    const plugin = new Plugin(config);
+
+    try {
+      await plugin.startUp(config);
+      // we shouldn't hit here
+      expect(true).toBeFalsy();
+    } catch (err) {
+      expect(err).toEqual(
+        Error(
+          'Error in Github Server App Authentication Plugin-GITHUB_SERVER_APP_PLUGIN startup. Error: Pem file path is invalid /invalid/path',
+        ),
+      );
+    }
   });
 
   it('GetJWT method', () => {
@@ -72,7 +110,8 @@ describe('Github Server App Plugin', () => {
     const nowPlus10s = Date.now() + 10000;
     const timeDifference =
       plugin._getTimeDifferenceInMsToFutureDate(nowPlus10s);
-    expect(timeDifference).toEqual(10000);
+    expect(timeDifference).toBeLessThanOrEqual(10000);
+    expect(timeDifference).toBeGreaterThanOrEqual(9990);
   });
 
   it('Test JWT lifecycle Handler', async () => {

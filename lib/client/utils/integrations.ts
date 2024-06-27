@@ -1,8 +1,6 @@
-import { getConfig } from '../../common/config/config';
-
 export const translateIntegrationTypeToBrokerIntegrationType = (
   integrationType: string,
+  config: Record<string, any>,
 ): string => {
-  const config = getConfig();
   return config.sourceTypes[integrationType].brokerType;
 };
